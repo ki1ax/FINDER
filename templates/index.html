@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
+    <title>FINDER</title>
+
+    <style>
+        body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    text-align: center;
+}
+
+.logo {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+
+
+h1 {
+    color: #333;
+}
+h2 {
+    font-size: 24px;
+    color: #333;
+    position: absolute;
+    top: 70px;
+    left: 20px;
+}
+#photoSearchForm {
+    margin-top: 20px;
+}
+input[type="file"] {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+input[type="submit"] {
+    background-color: #5cb85c;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+input[type="submit"]:hover {
+    background-color: #4cae4c;
+}
+#results {
+    margin-top: 20px;
+}
+#error {
+    color: red;
+}
+    </style>
+</head>
+
+<body>
+    <meta name="viewport" content="width=device-width, initial-scale=1,5">
+    <div class="logo">FINDER</div>
+    <h2>Поиск социальных сетей человека по его фотографии</h2>
+    <div class="container">
+        <h1>Загрузите фотографию для поиска</h1>
+        <form id="photoSearchForm" action="/" enctype="multipart/form-data" method="post">
+            <input type="file" name="photo" required>
+            <input type="submit" value="Загрузить и искать">
+        </form>
+        <div id="results"></div>
+        <div id="error"></div>
+    </div>
+
+    <script>
+document.getElementById('photoSearchForm').onsubmit = function(e) {
+    e.preventDefault();
+    var formData = new FormData(this);
+    var errorDiv = document.getElementById('error');
+    errorDiv.textContent = '';
+
+    // Проверка формата файла перед отправкой
+    var fileInput = document.querySelector('input[type="file"]');
+    var filePath = fileInput.value;
+    var allowedExtensions = /(\.jpg|\.jpeg)$/i;
+    if (!allowedExtensions.exec(filePath)) {
+        errorDiv.textContent = 'Неправильный формат файла. Пожалуйста, загрузите фото в формате JPEG или JPG.';
+        fileInput.value = '';
+        return false;
+    }
+
+    fetch('/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (!response.ok) {
+            return response.json().then(err => { throw err; });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(data.error) {
+            errorDiv.textContent = data.error;
+        } else {
+            var resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+            data.forEach(function(url) {
+                var link = document.createElement('a');
+                link.href = url;
+                link.innerText = url;
+                link.target = '_blank';
+                resultsContainer.appendChild(link);
+                resultsContainer.appendChild(document.createElement('br'));
+            });
+        }
+    }).catch(error => {
+        errorDiv.textContent = error.error;
+    });
+};
+    </script>
+
+</body>
+</html>
